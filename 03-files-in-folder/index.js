@@ -7,9 +7,7 @@ const getFileList = async (dirName) => {
   const items = await fsp.readdir(dirName, { withFileTypes: true });
 
   for (const item of items) {
-    if (item.isDirectory()) {
-      files = [...files, ...(await getFileList(`${dirName}/${item.name}`))];
-    } else {
+    if (!item.isDirectory()) {
       files.push(`${dirName}/${item.name}`);
     }
   }
