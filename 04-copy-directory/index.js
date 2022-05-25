@@ -1,28 +1,43 @@
-const fs = require('fs').promises;
+const fsp = require('fs').promises;
 const path = require('path');
 
+async function deleteDir(dir) {
+  await fsp.rmdir(dir, { recursive: true });
+  return dir;
+}
+
+async function createDir(dir) {
+  fsp.mkdir(dir, (err) => {
+    if (err) {
+      console.log('Error', err);
+    }
+  });
+
+  return dir;
+}
+
 async function copyDir(dir, copy) {
-  const dirInfo = await fs.readdir(dir, { withFileTypes: true });
+  const dirInfo = await fsp.readdir(dir, { withFileTypes: true });
 
   for (const file of dirInfo) {
     if (file.isDirectory()) {
-      await fs.mkdir(path.resolve(copy, file.name));
+      await fsp.mkdir(path.resolve(copy, file.name));
       await copyDir(
         path.resolve(dir, file.name),
         path.resolve(copy, file.name)
       );
     } else {
-      fs.copyFile(path.resolve(dir, file.name), path.resolve(copy, file.name));
+      fsp.copyFile(path.resolve(dir, file.name), path.resolve(copy, file.name));
     }
   }
 }
 
-fs.mkdir(path.resolve(__dirname, 'files-copy'), (err) => {
-  if (err) {
-    console.log('Error', err);
-  }
-});
-copyDir(
-  path.resolve(__dirname, 'files'),
-  path.resolve(__dirname, 'files-copy')
-);
+if (fsp.access(path.resolve(__dirname, 'files-copy'))) {
+  deleteDir(path.resolve(__dirname, 'files-copy'))
+    .then((dir) => createDir(dir))
+    .then((dir) => copyDir(path.resolve(__dirname, 'files'), dir));
+} else {
+  createDir(path.resolve(__dirname, 'files-copy')).then((dir) =>
+    copyDir(path.resolve(__dirname, 'files'), dir)
+  );
+}
