@@ -32,12 +32,13 @@ async function copyDir(dir, copy) {
   }
 }
 
-if (fsp.access(path.resolve(__dirname, 'files-copy'))) {
-  deleteDir(path.resolve(__dirname, 'files-copy'))
-    .then((dir) => createDir(dir))
-    .then((dir) => copyDir(path.resolve(__dirname, 'files'), dir));
-} else {
-  createDir(path.resolve(__dirname, 'files-copy')).then((dir) =>
-    copyDir(path.resolve(__dirname, 'files'), dir)
+fsp
+  .access(path.resolve(__dirname, 'files-copy'))
+  .then(() => deleteDir(path.resolve(__dirname, 'files-copy')))
+  .then((dir) => createDir(dir))
+  .then((dir) => copyDir(path.resolve(__dirname, 'files'), dir))
+  .catch(() =>
+    createDir(path.resolve(__dirname, 'files-copy')).then((dir) =>
+      copyDir(path.resolve(__dirname, 'files'), dir)
+    )
   );
-}
